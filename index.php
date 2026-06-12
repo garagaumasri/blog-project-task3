@@ -3,136 +3,336 @@ session_start();
 
 if(!isset($_SESSION['username'])) {
     header("Location: login.php");
+    exit();
 }
 
 include "db.php";
 
 $user_id = $_SESSION['user_id'];
 
-$sql = "SELECT * FROM posts
-        WHERE user_id='$user_id'
-        ORDER BY id DESC";
+$limit = 3;
+
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+
+if($page < 1){
+    $page = 1;
+}
+
+$start = ($page - 1) * $limit;
+
+$search = "";
+
+if(isset($_GET['search']) && !empty($_GET['search'])){
+
+    $search = $_GET['search'];
+
+    $sql = "SELECT * FROM posts
+            WHERE user_id='$user_id'
+            AND (title LIKE '%$search%'
+            OR content LIKE '%$search%')
+            ORDER BY id DESC
+            LIMIT $start,$limit";
+
+    $count_sql = "SELECT COUNT(*) AS total
+                  FROM posts
+                  WHERE user_id='$user_id'
+                  AND (title LIKE '%$search%'
+                  OR content LIKE '%$search%')";
+
+} else {
+
+    $sql = "SELECT * FROM posts
+            WHERE user_id='$user_id'
+            ORDER BY id DESC
+            LIMIT $start,$limit";
+
+    $count_sql = "SELECT COUNT(*) AS total
+                  FROM posts
+                  WHERE user_id='$user_id'";
+}
+
 $result = $conn->query($sql);
+
+$count_result = $conn->query($count_sql);
+$count_row = $count_result->fetch_assoc();
+
+$total_posts = $count_row['total'];
+$total_pages = ceil($total_posts / $limit);
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
-    <title>All Blog Posts</title>
 
-    <style>
-        body{
-            font-family: Arial;
-            background:#f2f6ff;
-            padding:20px;
-        }
+<title>BlogSphere - My Posts</title>
 
-        h1{
-            text-align:center;
-        }
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-        .top-buttons{
-            text-align:center;
-            margin-bottom:20px;
-        }
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-        .top-buttons a{
-            text-decoration:none;
-            background:green;
-            color:white;
-            padding:10px 15px;
-            margin:5px;
-            border-radius:5px;
-        }
+<style>
 
-        .post{
-            background:white;
-            padding:20px;
-            margin:20px auto;
-            width:70%;
-            border-radius:10px;
-            box-shadow:0px 0px 10px rgba(0,0,0,0.1);
-        }
+body{
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    min-height:100vh;
+}
 
-        .post h2{
-            color:#333;
-        }
+.hero{
+    background:white;
+    border-radius:20px;
+    overflow:hidden;
+    margin-top:20px;
+}
 
-        .date{
-            color:gray;
-            font-size:14px;
-        }
+.hero img{
+    height:300px;
+    object-fit:cover;
+}
 
-        .actions{
-            margin-top:15px;
-        }
+.card{
+    border:none;
+    border-radius:15px;
+    transition:0.3s;
+}
 
-        .actions a{
-            text-decoration:none;
-            padding:8px 12px;
-            border-radius:5px;
-            color:white;
-            margin-right:10px;
-        }
+.card:hover{
+    transform:translateY(-5px);
+}
 
-        .edit{
-            background:blue;
-        }
+.avatar{
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    margin-right:10px;
+}
 
-        .delete{
-            background:red;
-        }
-    </style>
+.footer{
+    color:white;
+    text-align:center;
+    padding:20px;
+}
+
+</style>
+
 </head>
 
 <body>
 
-<h1>📖 Blog Posts</h1>
+<nav class="navbar navbar-dark bg-dark shadow">
 
-<div class="top-buttons">
-    <a href="create.php">➕ Create New Post</a>
-    <a href="logout.php">🚪 Logout</a>
+<div class="container">
+
+<span class="navbar-brand fw-bold">
+📝 BlogSphere
+</span>
+
+<span class="text-white">
+
+<img
+src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+class="avatar">
+
+<?php echo $_SESSION['username']; ?>
+
+</span>
+
+</div>
+
+</nav>
+
+<div class="container">
+
+<div class="hero shadow-lg">
+
+<img
+src="https://images.pexels.com/photos/261949/pexels-photo-261949.jpeg"
+class="img-fluid w-100"
+style="height:300px;object-fit:cover;"
+alt="Blog Banner">
+
+<div class="p-4">
+
+<h1 class="text-center">
+📖 My Blog Posts
+</h1>
+
+<p class="text-center text-muted">
+Manage, Search and Organize Your Content
+</p>
+
+</div>
+
+</div>
+
+<div class="text-center my-4">
+
+<a href="dashboard.php" class="btn btn-secondary m-1">
+🏠 Dashboard
+</a>
+
+<a href="create.php" class="btn btn-success m-1">
+➕ Create Post
+</a>
+
+<a href="logout.php" class="btn btn-danger m-1">
+🚪 Logout
+</a>
+
+</div>
+
+<form method="GET" class="mb-4">
+
+<div class="input-group">
+
+<span class="input-group-text">
+🔍
+</span>
+
+<input
+type="text"
+name="search"
+class="form-control"
+placeholder="Search Posts..."
+value="<?php echo $search; ?>">
+
+<button class="btn btn-primary">
+Search
+</button>
+
+</div>
+
+</form>
+
+<?php
+
+if($result->num_rows > 0){
+
+while($row = $result->fetch_assoc()){
+
+?>
+
+<div class="card shadow-lg mb-4">
+
+<div class="card-body">
+
+<h3 class="card-title">
+
+<?php echo $row['title']; ?>
+
+</h3>
+
+<p class="card-text">
+
+<?php echo $row['content']; ?>
+
+</p>
+
+<p class="text-muted">
+
+📅 Posted on:
+<?php echo $row['created_at']; ?>
+
+</p>
+
+<a
+href="edit.php?id=<?php echo $row['id']; ?>"
+class="btn btn-primary">
+
+✏ Edit
+
+</a>
+
+<a
+href="delete.php?id=<?php echo $row['id']; ?>"
+class="btn btn-danger"
+onclick="return confirm('Delete this post?')">
+
+🗑 Delete
+
+</a>
+
+</div>
+
 </div>
 
 <?php
-if($result->num_rows > 0){
 
-    while($row = $result->fetch_assoc()){
-
-        echo "
-        <div class='post'>
-
-            <h2>".$row['title']."</h2>
-
-            <p>".$row['content']."</p>
-
-            <p class='date'>
-            Posted on: ".$row['created_at']."
-            </p>
-
-            <div class='actions'>
-                <a class='edit'
-                href='edit.php?id=".$row['id']."'>
-                Edit
-                </a>
-
-                <a class='delete'
-                href='delete.php?id=".$row['id']."'>
-                Delete
-                </a>
-            </div>
-
-        </div>
-        ";
-    }
-
-} else {
-
-    echo "<h3 style='text-align:center;'>
-    No Posts Available
-    </h3>";
 }
+
+}else{
+
 ?>
+
+<div class="alert alert-warning text-center">
+
+No Posts Found
+
+</div>
+
+<?php
+
+}
+
+?>
+
+<div class="text-center mb-4">
+
+<?php if($page > 1){ ?>
+
+<a
+href="index.php?page=<?php echo $page-1; ?>&search=<?php echo $search; ?>"
+class="btn btn-warning m-1">
+
+⬅ Previous
+
+</a>
+
+<?php } ?>
+
+<?php
+
+for($i=1;$i<=$total_pages;$i++){
+
+?>
+
+<a
+href="index.php?page=<?php echo $i; ?>&search=<?php echo $search; ?>"
+class="btn btn-secondary m-1">
+
+<?php echo $i; ?>
+
+</a>
+
+<?php
+
+}
+
+?>
+
+<?php if($page < $total_pages){ ?>
+
+<a
+href="index.php?page=<?php echo $page+1; ?>&search=<?php echo $search; ?>"
+class="btn btn-success m-1">
+
+Next ➡
+
+</a>
+
+<?php } ?>
+
+</div>
+
+<div class="footer">
+
+<h5>© 2026 BlogSphere</h5>
+
+<p>Smart Blog Management Platform</p>
+
+</div>
+
+</div>
 
 </body>
 </html>

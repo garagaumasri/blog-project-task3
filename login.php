@@ -22,13 +22,18 @@ if(isset($_POST['login'])) {
             $_SESSION['user_id'] = $row['id'];
 
             header("Location: dashboard.php");
+            exit();
 
         } else {
+
             $message = "❌ Wrong Password!";
+
         }
 
     } else {
+
         $message = "❌ User Not Found!";
+
     }
 }
 ?>
@@ -36,84 +41,162 @@ if(isset($_POST['login'])) {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Login</title>
 
-    <style>
-        body{
-            font-family: Arial;
-            background:#f2f6ff;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            height:100vh;
-        }
+<title>BlogSphere Login</title>
 
-        .box{
-            background:white;
-            padding:30px;
-            width:300px;
-            border-radius:10px;
-            box-shadow:0px 0px 10px rgba(0,0,0,0.1);
-            text-align:center;
-        }
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-        input{
-            width:100%;
-            padding:10px;
-            margin:10px 0;
-        }
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-        button{
-            width:100%;
-            padding:10px;
-            background:blue;
-            color:white;
-            border:none;
-            cursor:pointer;
-        }
+<style>
 
-        button:hover{
-            background:darkblue;
-        }
+body{
+    background-image:url('https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=1600');
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+    min-height:100vh;
+}
 
-        .message{
-            color:red;
-            margin-bottom:15px;
-            font-weight:bold;
-        }
+.overlay{
+    background:rgba(0,0,0,0.5);
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
 
-        a{
-            text-decoration:none;
-            display:block;
-            margin-top:15px;
-            color:green;
-        }
-    </style>
+.login-card{
+    width:420px;
+    background:rgba(255,255,255,0.15);
+    backdrop-filter:blur(15px);
+    border-radius:20px;
+    padding:30px;
+    color:white;
+    box-shadow:0 8px 32px rgba(0,0,0,0.3);
+}
+
+.login-card h2{
+    text-align:center;
+    margin-bottom:20px;
+}
+
+.avatar{
+    text-align:center;
+    font-size:70px;
+    margin-bottom:15px;
+}
+
+.btn-login{
+    width:100%;
+    padding:12px;
+    font-size:18px;
+    transition:0.3s;
+}
+
+.btn-login:hover{
+    transform:scale(1.03);
+}
+
+.form-control{
+    border-radius:10px;
+}
+
+.footer-text{
+    text-align:center;
+    margin-top:20px;
+}
+
+.footer-text a{
+    color:white;
+    text-decoration:none;
+    font-weight:bold;
+}
+
+.footer-text a:hover{
+    text-decoration:underline;
+}
+
+</style>
+
 </head>
 
 <body>
 
-<div class="box">
+<div class="overlay">
 
-<h2>User Login</h2>
+<div class="login-card">
 
-<?php
-if($message != "") {
-    echo "<div class='message'>$message</div>";
-}
-?>
+<div class="avatar">
+<i class="fas fa-user-circle"></i>
+</div>
+
+<h2>BlogSphere Login</h2>
+
+<?php if($message != "") { ?>
+
+<div class="alert alert-danger text-center">
+
+<?php echo $message; ?>
+
+</div>
+
+<?php } ?>
 
 <form method="POST">
 
-<input type="text" name="username" placeholder="Enter Username" required>
+<div class="mb-3">
 
-<input type="password" name="password" placeholder="Enter Password" required>
+<label>Username</label>
 
-<button type="submit" name="login">Login</button>
+<input
+type="text"
+name="username"
+class="form-control"
+placeholder="Enter Username"
+required>
+
+</div>
+
+<div class="mb-3">
+
+<label>Password</label>
+
+<input
+type="password"
+name="password"
+class="form-control"
+placeholder="Enter Password"
+required>
+
+</div>
+
+<button
+type="submit"
+name="login"
+class="btn btn-primary btn-login">
+
+<i class="fas fa-sign-in-alt"></i>
+ Login
+
+</button>
 
 </form>
 
-<a href="register.php">Create New Account</a>
+<div class="footer-text">
+
+<p class="mt-3">
+Don't have an account?
+</p>
+
+<a href="register.php">
+Create New Account
+</a>
+
+</div>
+
+</div>
 
 </div>
 

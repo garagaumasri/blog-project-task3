@@ -3,36 +3,42 @@ session_start();
 
 if(!isset($_SESSION['username'])) {
     header("Location: login.php");
+    exit();
 }
 
 include "db.php";
 
-// Get post ID
 $id = $_GET['id'];
 
-// Fetch existing data
-$sql = "SELECT * FROM posts WHERE id=$id";
+$sql = "SELECT * FROM posts WHERE id='$id'";
 $result = $conn->query($sql);
 
 $row = $result->fetch_assoc();
 
-// Update post
 if(isset($_POST['update'])) {
 
     $title = $_POST['title'];
     $content = $_POST['content'];
 
-    $update_sql = "UPDATE posts
-                   SET title='$title',
-                       content='$content'
-                   WHERE id=$id";
+    $stmt = $conn->prepare(
+    "UPDATE posts
+     SET title=?, content=?
+     WHERE id=?"
+);
+
+$stmt->bind_param("ssi", $title, $content, $id);
+
+$stmt->execute();
 
     if($conn->query($update_sql) === TRUE) {
 
         header("Location: index.php");
+        exit();
 
     } else {
-        echo "Error updating post";
+
+        echo "Error Updating Post";
+
     }
 }
 ?>
@@ -40,76 +46,166 @@ if(isset($_POST['update'])) {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Edit Post</title>
 
-    <style>
-        body{
-            font-family: Arial;
-            background:#f2f6ff;
-            display:flex;
-            justify-content:center;
-            align-items:center;
-            height:100vh;
-        }
+<title>Edit Post - BlogSphere</title>
 
-        .box{
-            background:white;
-            padding:30px;
-            width:400px;
-            border-radius:10px;
-            box-shadow:0px 0px 10px rgba(0,0,0,0.1);
-        }
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-        h2{
-            text-align:center;
-        }
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-        input, textarea{
-            width:100%;
-            padding:10px;
-            margin:10px 0;
-        }
+<style>
 
-        textarea{
-            height:120px;
-        }
+body{
+    background-image:url('https://images.unsplash.com/photo-1455390582262-044cdead277a?w=1600');
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+    min-height:100vh;
+}
 
-        button{
-            width:100%;
-            padding:10px;
-            background:blue;
-            color:white;
-            border:none;
-            cursor:pointer;
-        }
+.overlay{
+    background:rgba(0,0,0,0.55);
+    min-height:100vh;
+    padding:40px 0;
+}
 
-        button:hover{
-            background:darkblue;
-        }
-    </style>
+.edit-card{
+    width:700px;
+    max-width:95%;
+    margin:auto;
+    background:rgba(255,255,255,0.15);
+    backdrop-filter:blur(15px);
+    border-radius:20px;
+    padding:30px;
+    color:white;
+    box-shadow:0 8px 32px rgba(0,0,0,0.3);
+}
+
+.form-control{
+    border-radius:12px;
+}
+
+.btn{
+    transition:0.3s;
+}
+
+.btn:hover{
+    transform:scale(1.03);
+}
+
+.avatar{
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    margin-right:10px;
+}
+
+.navbar{
+    box-shadow:0 4px 10px rgba(0,0,0,0.3);
+}
+
+</style>
+
 </head>
 
 <body>
 
-<div class="box">
+<nav class="navbar navbar-dark bg-dark">
 
-<h2>Edit Blog Post</h2>
+<div class="container">
+
+<span class="navbar-brand fw-bold">
+📝 BlogSphere
+</span>
+
+<span class="text-white">
+
+<img
+src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+class="avatar">
+
+<?php echo $_SESSION['username']; ?>
+
+</span>
+
+</div>
+
+</nav>
+
+<div class="overlay">
+
+<div class="edit-card">
+
+<h2 class="text-center mb-4">
+
+<i class="fas fa-edit"></i>
+ Edit Blog Post
+
+</h2>
 
 <form method="POST">
 
-<input type="text"
+<div class="mb-3">
+
+<label class="form-label">
+Post Title
+</label>
+
+<input
+type="text"
 name="title"
+class="form-control"
 value="<?php echo $row['title']; ?>"
 required>
 
-<textarea name="content"
+</div>
+
+<div class="mb-3">
+
+<label class="form-label">
+Post Content
+</label>
+
+<textarea
+name="content"
+class="form-control"
+rows="8"
 required><?php echo $row['content']; ?></textarea>
 
-<button type="submit" name="update">
-Update Post
+</div>
+
+<button
+type="submit"
+name="update"
+class="btn btn-primary w-100">
+
+<i class="fas fa-save"></i>
+ Update Post
+
 </button>
 
 </form>
+
+<div class="text-center mt-4">
+
+<a href="dashboard.php"
+class="btn btn-secondary m-1">
+
+🏠 Dashboard
+
+</a>
+
+<a href="index.php"
+class="btn btn-success m-1">
+
+📖 View Posts
+
+</a>
+
+</div>
+
+</div>
 
 </div>
 
